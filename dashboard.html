@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperPilot - AI Research Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --accent: #8b5cf6;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #6b7280;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            padding: 2rem 1.5rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            color: var(--gray);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #eff6ff;
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .workspace-tag {
+            display: inline-block;
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Page Containers */
+        .page-container {
+            display: none;
+        }
+
+        .page-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .icon-1 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .icon-2 { background: linear-gradient(135deg, #10b981, #059669); }
+        .icon-3 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .icon-4 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .stat-info h3 {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .view-all {
+            background: #eff6ff;
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .view-all:hover {
+            background: #e0f2ff;
+        }
+
+        /* Recent Activity */
+        .paper-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            background: #f9fafb;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .paper-item:hover {
+            background: #eff6ff;
+            transform: translateX(5px);
+        }
+
+        .paper-icon {
+            width: 50px;
+            height: 50px;
+            background: #e0f2fe;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .paper-info {
+            flex: 1;
+        }
+
+        .paper-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .paper-desc {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .paper-time {
+            color: var(--gray);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Quick Actions */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .action-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        /* AI Insights */
+        .insight-card {
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+
+        .insight-trend {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        }
+
+        .insight-trend::before {
+            background: var(--primary);
+        }
+
+        .insight-gap {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+
+        .insight-gap::before {
+            background: var(--secondary);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .insight-header i {
+            font-size: 1.2rem;
+        }
+
+        .insight-trend .insight-header i {
+            color: var(--primary);
+        }
+
+        .insight-gap .insight-header i {
+            color: var(--secondary);
+        }
+
+        .insight-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Trending Topics */
+        .topics-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .topic-tag {
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .topic-tag:hover {
+            background: #e0f2ff;
+            transform: translateY(-2px);
+        }
+
+        /* AI Assistant */
+        .ai-assistant {
+            background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+            color: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-top: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-assistant::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .ai-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .ai-header p {
+            opacity: 0.9;
+        }
+
+        .ai-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-input input {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+
+        .ai-input input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .ai-input input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .ai-input button {
+            background: white;
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-input button:hover {
+            background: #f0f9ff;
+            transform: scale(1.05);
+        }
+
+        .ai-response {
+            margin-top: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            display: none;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .ai-response-content {
+            margin-bottom: 1rem;
+        }
+
+        .ai-response-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ai-action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .ai-action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 250px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        /* Search Results */
+        .search-results {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--radius);
+            background: white;
+        }
+
+        .search-result-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .search-result-item:hover {
+            background: #f9fafb;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+
+        .result-authors {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .result-abstract {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed #e5e7eb;
+            border-radius: var(--radius);
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #f9fafb;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .file-list {
+            margin-top: 2rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .file-icon {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .file-remove {
+            color: #ef4444;
+            cursor: pointer;
+        }
+
+        /* Workspace Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .workspace-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .workspace-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .workspace-icon {
+            width: 50px;
+            height: 50px;
+            background: #e0f2fe;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .workspace-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .workspace-stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .workspace-stat-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .workspace-stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            margin-left: auto;
+        }
+
+        .message-bubble {
+            padding: 1rem;
+            border-radius: 18px;
+            display: inline-block;
+        }
+
+        .chat-message.ai .message-bubble {
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+
+        .chat-message.user .message-bubble {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .search-bar {
+                max-width: 100%;
+            }
+            
+            .user-menu {
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .ai-input {
+                flex-direction: column;
+            }
+            
+            .ai-input button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            width: 350px;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .notification-item:hover {
+            background: #f9fafb;
+        }
+
+        .notification-item.unread {
+            background: #eff6ff;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo" onclick="switchPage('dashboard')">
+                <div class="logo-icon">PP</div>
+                <div class="logo-text">Paper<span style="color: var(--accent);">Pilot</span></div>
+            </div>
+            
+            <nav>
+                <button class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+                    <i class="fas fa-home"></i> Dashboard
+                </button>
+                <button class="nav-item" data-page="search" onclick="switchPage('search')">
+                    <i class="fas fa-search"></i> Search Papers
+                    <span class="workspace-tag" id="searchCount">50M+</span>
+                </button>
+                <button class="nav-item" data-page="workspaces" onclick="switchPage('workspaces')">
+                    <i class="fas fa-folder"></i> Workspaces
+                    <span class="workspace-tag" id="workspaceCount">12</span>
+                </button>
+                <button class="nav-item" data-page="ai" onclick="switchPage('ai')">
+                    <i class="fas fa-brain"></i> AI Assistant
+                    <span class="workspace-tag" id="aiCount">892</span>
+                </button>
+                <button class="nav-item" data-page="analytics" onclick="switchPage('analytics')">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </button>
+                <button class="nav-item" data-page="upload" onclick="switchPage('upload')">
+                    <i class="fas fa-upload"></i> Upload PDF
+                </button>
+                <button class="nav-item" data-page="settings" onclick="switchPage('settings')">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </nav>
+            
+            <div style="margin-top: 3rem;">
+                <h3 style="font-size: 0.9rem; color: var(--gray); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-clock"></i> RECENT WORKSPACES
+                </h3>
+                <button class="nav-item" onclick="openWorkspace('ml')">
+                    <i class="fas fa-microchip"></i> Machine Learning
+                    <span class="workspace-tag" id="mlCount">42</span>
+                </button>
+                <button class="nav-item" onclick="openWorkspace('cv')">
+                    <i class="fas fa-eye"></i> Computer Vision
+                    <span class="workspace-tag" id="cvCount">28</span>
+                </button>
+                <button class="nav-item" onclick="openWorkspace('nlp')">
+                    <i class="fas fa-language"></i> NLP Research
+                    <span class="workspace-tag" id="nlpCount">35</span>
+                </button>
+            </div>
+
+            <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                    <div class="user-avatar" onclick="showProfile()">AR</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">Dr. Alex Rivera</div>
+                        <div style="color: var(--gray); font-size: 0.8rem;">Stanford University</div>
+                    </div>
+                </div>
+                <button class="nav-item" style="width: 100%; justify-content: center; background: #eff6ff; color: var(--primary);" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search 50M+ research papers, authors, or topics..." 
+                           onkeypress="if(event.key === 'Enter') performSearch()">
+                </div>
+                
+                <div class="user-menu">
+                    <div class="notification tooltip" onclick="toggleNotifications()">
+                        <i class="fas fa-bell" style="font-size: 1.2rem;"></i>
+                        <div class="notification-badge">3</div>
+                        <span class="tooltip-text">Notifications (3 new)</span>
+                    </div>
+                    <div class="notification-panel" id="notificationPanel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 600;">Notifications</h3>
+                            <button onclick="markAllAsRead()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.9rem;">Mark all as read</button>
+                        </div>
+                        <div class="notification-item unread" onclick="openNotification('analysis')">
+                            <div style="font-weight: 600; font-size: 0.9rem;">AI Analysis Complete</div>
+                            <div style="color: var(--gray); font-size: 0.8rem;">Your paper "Attention Mechanisms" has been analyzed</div>
+                            <div style="color: var(--gray); font-size: 0.7rem; margin-top: 5px;">10 minutes ago</div>
+                        </div>
+                        <div class="notification-item unread" onclick="openNotification('papers')">
+                            <div style="font-weight: 600; font-size: 0.9rem;">New Papers Added</div>
+                            <div style="color: var(--gray); font-size: 0.8rem;">3 new papers added to your ML workspace</div>
+                            <div style="color: var(--gray); font-size: 0.7rem; margin-top: 5px;">1 hour ago</div>
+                        </div>
+                        <div class="notification-item unread" onclick="openNotification('collaboration')">
+                            <div style="font-weight: 600; font-size: 0.9rem;">Collaboration Request</div>
+                            <div style="color: var(--gray); font-size: 0.8rem;">Dr. Chen wants to join your CV workspace</div>
+                            <div style="color: var(--gray); font-size: 0.7rem; margin-top: 5px;">2 hours ago</div>
+                        </div>
+                        <div class="notification-item" onclick="openNotification('digest')">
+                            <div style="font-weight: 600; font-size: 0.9rem;">Weekly Digest</div>
+                            <div style="color: var(--gray); font-size: 0.8rem;">Your weekly research summary is ready</div>
+                            <div style="color: var(--gray); font-size: 0.7rem; margin-top: 5px;">1 day ago</div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-avatar tooltip" onclick="showProfile()">
+                        AR
+                        <span class="tooltip-text">Dr. Alex Rivera<br>Click for profile</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div class="page-container active" id="dashboard-page">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="switchPage('search')">
+                        <div class="stat-icon icon-1">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>TOTAL PAPERS</h3>
+                            <div class="stat-value" id="totalPapers">1,247</div>
+                            <div class="stat-change">+124 this month</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" onclick="switchPage('ai')">
+                        <div class="stat-icon icon-2">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>AI ANALYSIS</h3>
+                            <div class="stat-value" id="totalAnalyses">892</div>
+                            <div class="stat-change">+89 this week</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" onclick="switchPage('workspaces')">
+                        <div class="stat-icon icon-3">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>WORKSPACES</h3>
+                            <div class="stat-value" id="totalWorkspaces">12</div>
+                            <div class="stat-change">3 active</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" onclick="switchPage('ai')">
+                        <div class="stat-icon icon-4">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>CHAT SESSIONS</h3>
+                            <div class="stat-value" id="totalChats">156</div>
+                            <div class="stat-change">+23 today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="content-grid">
+                    <!-- Left Column -->
+                    <div>
+                        <!-- Recent Activity -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Recent Activity</h2>
+                                <button class="view-all" onclick="viewAllActivity()">View All</button>
+                            </div>
+                            
+                            <div class="paper-item" onclick="openPaper('attention')">
+                                <div class="paper-icon">
+                                    <i class="fas fa-file-import"></i>
+                                </div>
+                                <div class="paper-info">
+                                    <div class="paper-title">Imported: "Attention Is All You Need"</div>
+                                    <div class="paper-desc">Transformer architecture paper added to ML workspace</div>
+                                    <div class="paper-time"><i class="far fa-clock"></i> 10 min ago</div>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-item" onclick="openAnalysis('cnn')">
+                                <div class="paper-icon">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="paper-info">
+                                    <div class="paper-title">AI Analysis Complete</div>
+                                    <div class="paper-desc">Comparative analysis of 5 CNN architectures generated</div>
+                                    <div class="paper-time"><i class="far fa-clock"></i> 1 hour ago</div>
+                                </div>
+                            </div>
+                            
+                            <div class="paper-item" onclick="openWorkspace('medical')">
+                                <div class="paper-icon">
+                                    <i class="fas fa-share-alt"></i>
+                                </div>
+                                <div class="paper-info">
+                                    <div class="paper-title">Shared Workspace</div>
+                                    <div class="paper-desc">"Medical Imaging AI" shared with 3 team members</div>
+                                    <div class="paper-time"><i class="far fa-clock"></i> 2 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Quick Actions</h2>
+                            </div>
+                            <div class="quick-actions-grid">
+                                <button class="action-btn" onclick="switchPage('search')">
+                                    <i class="fas fa-search"></i>
+                                    Search Database
+                                </button>
+                                <button class="action-btn" onclick="switchPage('upload')">
+                                    <i class="fas fa-upload"></i>
+                                    Upload PDF
+                                </button>
+                                <button class="action-btn" onclick="switchPage('ai')">
+                                    <i class="fas fa-brain"></i>
+                                    Ask AI Assistant
+                                </button>
+                                <button class="action-btn" onclick="generateReport()">
+                                    <i class="fas fa-chart-bar"></i>
+                                    Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <!-- AI Insights -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">AI Insights</h2>
+                                <i class="fas fa-lightbulb" style="color: #f59e0b; font-size: 1.3rem;"></i>
+                            </div>
+                            
+                            <div class="insight-card insight-trend" onclick="generateComparativeAnalysis()">
+                                <div class="insight-header">
+                                    <i class="fas fa-chart-line"></i>
+                                    <div class="insight-title">Trend Alert</div>
+                                </div>
+                                <p>Multiple papers in your workspace discuss "attention mechanisms" - want me to compile a comparative analysis?</p>
+                                <button class="ai-action-btn" style="margin-top: 10px; background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none;">Generate Analysis</button>
+                            </div>
+                            
+                            <div class="insight-card insight-gap" onclick="exploreResearchGap()">
+                                <div class="insight-header">
+                                    <i class="fas fa-search"></i>
+                                    <div class="insight-title">Research Gap Identified</div>
+                                </div>
+                                <p>Limited papers on "transformer efficiency in mobile devices" - potential area for new research.</p>
+                                <button class="ai-action-btn" style="margin-top: 10px; background: rgba(16, 185, 129, 0.1); color: var(--secondary); border: none;">Explore Papers</button>
+                            </div>
+                        </div>
+
+                        <!-- Trending Topics -->
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Trending in Your Field</h2>
+                            </div>
+                            <div class="topics-container">
+                                <span class="topic-tag" onclick="searchTopic('Large Language Models')">Large Language Models</span>
+                                <span class="topic-tag" onclick="searchTopic('Computer Vision')">Computer Vision</span>
+                                <span class="topic-tag" onclick="searchTopic('Reinforcement Learning')">Reinforcement Learning</span>
+                                <span class="topic-tag" onclick="searchTopic('Diffusion Models')">Diffusion Models</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant -->
+                <div class="ai-assistant">
+                    <div class="ai-header">
+                        <div class="ai-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <h2>PaperPilot AI Assistant</h2>
+                            <p>Ask me anything about your research papers or get insights</p>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-input">
+                        <input type="text" id="aiQuestion" placeholder="Example: Compare transformer vs CNN architectures..." 
+                               onkeypress="if(event.key === 'Enter') askAIQuestion()">
+                        <button onclick="askAIQuestion()">
+                            <i class="fas fa-paper-plane"></i> Ask AI
+                        </button>
+                    </div>
+                    
+                    <div class="ai-response" id="aiResponse">
+                        <div class="ai-response-content" id="responseText"></div>
+                        <div class="ai-response-actions" id="responseActions"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Page -->
+            <div class="page-container" id="search-page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Search Research Papers</h2>
+                    </div>
+                    
+                    <div class="search-bar" style="max-width: 100%; margin-bottom: 1.5rem;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchPageInput" placeholder="Search by title, author, keywords, or DOI..." 
+                               onkeypress="if(event.key === 'Enter') searchPapers()">
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                        <select class="form-input" style="flex: 1;" id="searchFilter">
+                            <option value="all">All Fields</option>
+                            <option value="title">Title</option>
+                            <option value="author">Author</option>
+                            <option value="abstract">Abstract</option>
+                            <option value="keywords">Keywords</option>
+                        </select>
+                        <select class="form-input" style="flex: 1;" id="yearFilter">
+                            <option value="all">All Years</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="searchPapers()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    
+                    <div class="search-results" id="searchResults">
+                        <!-- Search results will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspaces Page -->
+            <div class="page-container" id="workspaces-page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Your Workspaces</h2>
+                        <button class="btn btn-primary" onclick="createNewWorkspace()">
+                            <i class="fas fa-plus"></i> New Workspace
+                        </button>
+                    </div>
+                    
+                    <div class="workspace-grid" id="workspaceGrid">
+                        <!-- Workspace cards will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Assistant Page -->
+            <div class="page-container" id="ai-page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">AI Research Assistant</h2>
+                        <div>
+                            <span style="color: var(--gray); font-size: 0.9rem;">Total Queries: </span>
+                            <span style="font-weight: 600;" id="aiQueryCount">892</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-container" id="chatContainer">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                    
+                    <div class="ai-input" style="margin-top: 1rem;">
+                        <input type="text" id="chatInput" placeholder="Ask about your papers, research topics, or request analysis...">
+                        <button onclick="sendChatMessage()">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="suggestQuestion('Summarize my ML papers')">
+                            <i class="fas fa-file-contract"></i> Summarize Papers
+                        </button>
+                        <button class="btn btn-secondary" onclick="suggestQuestion('Find research gaps in my collection')">
+                            <i class="fas fa-search"></i> Find Research Gaps
+                        </button>
+                        <button class="btn btn-secondary" onclick="suggestQuestion('Compare CNN and Transformer architectures')">
+                            <i class="fas fa-balance-scale"></i> Compare Methods
+                        </button>
+                        <button class="btn btn-secondary" onclick="suggestQuestion('Generate literature review on attention mechanisms')">
+                            <i class="fas fa-book"></i> Literature Review
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Page -->
+            <div class="page-container" id="upload-page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Upload PDF Papers</h2>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <span style="color: var(--gray); font-size: 0.9rem;">Storage: </span>
+                            <div style="width: 100px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 65%; height: 100%; background: var(--primary);"></div>
+                            </div>
+                            <span style="font-size: 0.9rem;">4.2 GB / 10 GB</span>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 style="margin-bottom: 0.5rem;">Drag & Drop PDF Files</h3>
+                        <p style="color: var(--gray); margin-bottom: 1rem;">or click to browse files</p>
+                        <p style="font-size: 0.9rem; color: var(--gray);">Supported: PDF, up to 50 MB each</p>
+                    </div>
+                    
+                    <input type="file" id="fileInput" accept=".pdf" multiple style="display: none;" onchange="handleFileSelect(event)">
+                    
+                    <div class="file-list" id="fileList">
+                        <!-- Uploaded files will appear here -->
+                    </div>
+                    
+                    <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                        <button class="btn btn-secondary" onclick="clearUploads()">
+                            Clear All
+                        </button>
+                        <button class="btn btn-primary" onclick="processUploads()">
+                            <i class="fas fa-upload"></i> Upload & Analyze
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div class="page-container" id="analytics-page">
+                <div class="content-grid">
+                    <div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Research Activity</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="activityChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Top Keywords</h2>
+                            </div>
+                            <div id="keywordsList">
+                                <!-- Keywords will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Workspace Statistics</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="workspaceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin-top: 1.5rem;">
+                            <div class="card-header">
+                                <h2 class="card-title">Productivity Summary</h2>
+                            </div>
+                            <div id="productivityStats">
+                                <!-- Stats will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page-container" id="settings-page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Settings</h2>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h3 style="margin-bottom: 1.5rem; color: var(--dark);">Account Settings</h3>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-input" id="userName" value="Dr. Alex Rivera">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="userEmail" value="alex.rivera@stanford.edu">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Institution</label>
+                                <input type="text" class="form-input" id="userInstitution" value="Stanford University">
+                            </div>
+                            
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                Save Changes
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <h3 style="margin-bottom: 1.5rem; color: var(--dark);">Preferences</h3>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Default Workspace</label>
+                                <select class="form-input" id="defaultWorkspace">
+                                    <option value="ml">Machine Learning</option>
+                                    <option value="cv">Computer Vision</option>
+                                    <option value="nlp">NLP Research</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" id="autoAnalysis" checked>
+                                    <span>Auto-analyze uploaded papers</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" id="emailNotifications" checked>
+                                    <span>Email notifications</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" id="weeklyDigest" checked>
+                                    <span>Weekly research digest</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 700;">Your Profile</h2>
+                <button onclick="closeModal('profileModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray);">&times;</button>
+            </div>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 1rem;">AR</div>
+                <h3 style="font-size: 1.3rem; margin-bottom: 5px;">Dr. Alex Rivera</h3>
+                <p style="color: var(--gray); margin-bottom: 5px;">Professor of Computer Science</p>
+                <p style="color: var(--primary); font-weight: 500;">Stanford University</p>
+            </div>
+            <button onclick="closeModal('profileModal')" style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <div class="modal" id="paperModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 700;" id="paperModalTitle">Paper Details</h2>
+                <button onclick="closeModal('paperModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray);">&times;</button>
+            </div>
+            <div id="paperModalContent">
+                <!-- Paper content will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="workspaceModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 700;" id="workspaceModalTitle">Workspace Details</h2>
+                <button onclick="closeModal('workspaceModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray);">&times;</button>
+            </div>
+            <div id="workspaceModalContent">
+                <!-- Workspace content will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        const state = {
+            papers: 1247,
+            analyses: 892,
+            workspaces: 12,
+            chats: 156,
+            uploadedFiles: [],
+            searchResults: [],
+            workspacesData: [],
+            chatHistory: [],
+            aiQueries: 892
+        };
+
+        // Sample Data
+        const samplePapers = [
+            {
+                id: 1,
+                title: "Attention Is All You Need",
+                authors: "Vaswani, A., et al.",
+                abstract: "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
+                year: 2017,
+                citations: 85000,
+                workspace: "ml",
+                keywords: ["transformer", "attention", "nlp", "neural networks"]
+            },
+            {
+                id: 2,
+                title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+                authors: "Devlin, J., et al.",
+                abstract: "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models, BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers.",
+                year: 2018,
+                citations: 65000,
+                workspace: "nlp",
+                keywords: ["bert", "transformer", "language model", "nlp"]
+            },
+            {
+                id: 3,
+                title: "ResNet: Deep Residual Learning for Image Recognition",
+                authors: "He, K., et al.",
+                abstract: "Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions.",
+                year: 2015,
+                citations: 95000,
+                workspace: "cv",
+                keywords: ["resnet", "cnn", "computer vision", "deep learning"]
+            },
+            {
+                id: 4,
+                title: "Generative Adversarial Networks",
+                authors: "Goodfellow, I., et al.",
+                abstract: "We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G.",
+                year: 2014,
+                citations: 75000,
+                workspace: "ml",
+                keywords: ["gan", "generative", "adversarial", "deep learning"]
+            },
+            {
+                id: 5,
+                title: "AlphaGo: Mastering the Game of Go with Deep Neural Networks and Tree Search",
+                authors: "Silver, D., et al.",
+                abstract: "The game of Go has long been viewed as the most challenging of classic games for artificial intelligence due to its enormous search space and the difficulty of evaluating board positions and moves. We introduce a new approach to computer Go that uses 'value networks' to evaluate board positions and 'policy networks' to select moves.",
+                year: 2016,
+                citations: 55000,
+                workspace: "ml",
+                keywords: ["alphago", "reinforcement learning", "ai", "game theory"]
+            }
+        ];
+
+        const sampleWorkspaces = [
+            {
+                id: "ml",
+                name: "Machine Learning",
+                description: "Papers on ML algorithms, models, and applications",
+                papers: 42,
+                lastActive: "Today",
+                color: "#3b82f6",
+                keywords: ["neural networks", "deep learning", "transformer", "gan"]
+            },
+            {
+                id: "cv",
+                name: "Computer Vision",
+                description: "Image processing, object detection, and vision models",
+                papers: 28,
+                lastActive: "Yesterday",
+                color: "#10b981",
+                keywords: ["cnn", "object detection", "image segmentation", "vision"]
+            },
+            {
+                id: "nlp",
+                name: "NLP Research",
+                description: "Natural language processing and language models",
+                papers: 35,
+                lastActive: "2 days ago",
+                color: "#8b5cf6",
+                keywords: ["transformer", "bert", "language model", "nlp"]
+            },
+            {
+                id: "rl",
+                name: "Reinforcement Learning",
+                description: "RL algorithms and applications",
+                papers: 18,
+                lastActive: "1 week ago",
+                color: "#f59e0b",
+                keywords: ["reinforcement", "q-learning", "policy gradient", "rl"]
+            },
+            {
+                id: "medical",
+                name: "Medical Imaging AI",
+                description: "AI applications in medical imaging",
+                papers: 15,
+                lastActive: "3 days ago",
+                color: "#ef4444",
+                keywords: ["medical", "imaging", "healthcare", "diagnosis"]
+            },
+            {
+                id: "theory",
+                name: "AI Theory",
+                description: "Theoretical foundations of AI and ML",
+                papers: 22,
+                lastActive: "5 days ago",
+                color: "#6366f1",
+                keywords: ["theory", "mathematics", "algorithms", "foundations"]
+            }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            loadWorkspaces();
+            updateStats();
+            showNotification('Welcome to PaperPilot! Dashboard loaded successfully.', 'success');
+            
+            // Set up drag and drop for upload
+            setupDragAndDrop();
+        });
+
+        // Page Navigation
+        function switchPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(`${page}-page`).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            // Update page-specific content
+            if (page === 'search') {
+                populateSearchSuggestions();
+            } else if (page === 'workspaces') {
+                loadWorkspaces();
+            } else if (page === 'ai') {
+                loadChatHistory();
+            } else if (page === 'analytics') {
+                updateAnalytics();
+            }
+            
+            showNotification(`Switched to ${page.charAt(0).toUpperCase() + page.slice(1)}`, 'info');
+        }
+
+        // Search Functionality
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                showNotification('Please enter a search query', 'error');
+                return;
+            }
+            
+            switchPage('search');
+            document.getElementById('searchPageInput').value = query;
+            searchPapers();
+        }
+
+        function searchPapers() {
+            const query = document.getElementById('searchPageInput').value.trim();
+            const filter = document.getElementById('searchFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            
+            if (!query) {
+                showNotification('Please enter a search query', 'error');
+                return;
+            }
+            
+            showNotification(`Searching for "${query}"...`, 'info');
+            
+            // Simulate search delay
+            setTimeout(() => {
+                // Filter sample papers based on query
+                const results = samplePapers.filter(paper => {
+                    let matches = false;
+                    
+                    if (filter === 'all' || filter === 'title') {
+                        matches = matches || paper.title.toLowerCase().includes(query.toLowerCase());
+                    }
+                    if (filter === 'all' || filter === 'author') {
+                        matches = matches || paper.authors.toLowerCase().includes(query.toLowerCase());
+                    }
+                    if (filter === 'all' || filter === 'abstract') {
+                        matches = matches || paper.abstract.toLowerCase().includes(query.toLowerCase());
+                    }
+                    if (filter === 'all' || filter === 'keywords') {
+                        matches = matches || paper.keywords.some(kw => kw.toLowerCase().includes(query.toLowerCase()));
+                    }
+                    
+                    if (year !== 'all') {
+                        matches = matches && paper.year === parseInt(year);
+                    }
+                    
+                    return matches;
+                });
+                
+                displaySearchResults(results);
+                
+                if (results.length === 0) {
+                    showNotification('No papers found. Try different search terms.', 'error');
+                } else {
+                    showNotification(`Found ${results.length} papers`, 'success');
+                }
+            }, 800);
+        }
+
+        function displaySearchResults(results) {
+            const container = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 3rem; text-align: center; color: var(--gray);">
+                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 0.5rem;">No papers found</h3>
+                        <p>Try different search terms or filters</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = results.map(paper => `
+                <div class="search-result-item" onclick="viewPaperDetails(${paper.id})">
+                    <div class="result-title">${paper.title}</div>
+                    <div class="result-authors">${paper.authors} • ${paper.year}</div>
+                    <div class="result-abstract">${paper.abstract}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; gap: 10px;">
+                            <span style="background: #eff6ff; color: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                                <i class="fas fa-quote-right"></i> ${paper.citations.toLocaleString()} citations
+                            </span>
+                            <span style="background: #f0fdf4; color: var(--secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                                <i class="fas fa-folder"></i> ${paper.workspace.toUpperCase()}
+                            </span>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.9rem;" onclick="event.stopPropagation(); addToWorkspace(${paper.id})">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewPaperDetails(paperId) {
+            const paper = samplePapers.find(p => p.id === paperId);
+            if (!paper) return;
+            
+            document.getElementById('paperModalTitle').textContent = paper.title;
+            document.getElementById('paperModalContent').innerHTML = `
+                <div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--gray); margin-bottom: 0.5rem;">Authors</h3>
+                        <p>${paper.authors}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--gray); margin-bottom: 0.5rem;">Abstract</h3>
+                        <p>${paper.abstract}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--gray); margin-bottom: 0.5rem;">Details</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Year</div>
+                                <div style="font-weight: 600;">${paper.year}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Citations</div>
+                                <div style="font-weight: 600;">${paper.citations.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--gray); margin-bottom: 0.5rem;">Keywords</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${paper.keywords.map(kw => `
+                                <span style="background: #eff6ff; color: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 0.9rem;">
+                                    ${kw}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="downloadPaper(${paper.id})">
+                            <i class="fas fa-download"></i> Download PDF
+                        </button>
+                        <button class="btn btn-secondary" onclick="analyzePaper(${paper.id})">
+                            <i class="fas fa-brain"></i> AI Analysis
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            showModal('paperModal');
+        }
+
+        function addToWorkspace(paperId) {
+            const paper = samplePapers.find(p => p.id === paperId);
+            if (!paper) return;
+            
+            // Get workspace selection
+            const workspaceOptions = sampleWorkspaces.map(ws => 
+                `<option value="${ws.id}">${ws.name}</option>`
+            ).join('');
+            
+            const selectedWorkspace = prompt(
+                `Add "${paper.title}" to workspace:\n\n${sampleWorkspaces.map(ws => `${ws.id}: ${ws.name}`).join('\n')}\n\nEnter workspace ID:`,
+                paper.workspace
+            );
+            
+            if (selectedWorkspace && sampleWorkspaces.some(ws => ws.id === selectedWorkspace)) {
+                showNotification(`Added "${paper.title}" to ${selectedWorkspace.toUpperCase()} workspace`, 'success');
+                
+                // Update workspace paper count
+                const wsElement = document.getElementById(`${selectedWorkspace}Count`);
+                if (wsElement) {
+                    const currentCount = parseInt(wsElement.textContent);
+                    wsElement.textContent = currentCount + 1;
+                }
+                
+                // Update total papers
+                state.papers++;
+                updateStats();
+            }
+        }
+
+        // Workspace Management
+        function loadWorkspaces() {
+            const container = document.getElementById('workspaceGrid');
+            
+            container.innerHTML = sampleWorkspaces.map(ws => `
+                <div class="workspace-card" onclick="openWorkspace('${ws.id}')">
+                    <div class="workspace-header">
+                        <div class="workspace-icon" style="background: ${ws.color}20; color: ${ws.color};">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; font-size: 1.2rem;">${ws.papers}</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">papers</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 0.5rem; font-weight: 600;">${ws.name}</h3>
+                    <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 1rem;">${ws.description}</p>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem;">
+                        ${ws.keywords.map(kw => `
+                            <span style="background: #f3f4f6; color: var(--gray); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                                ${kw}
+                            </span>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="workspace-stats">
+                        <div class="workspace-stat">
+                            <div class="workspace-stat-value">${Math.floor(ws.papers * 0.7)}</div>
+                            <div class="workspace-stat-label">Analyzed</div>
+                        </div>
+                        <div class="workspace-stat">
+                            <div class="workspace-stat-value">${Math.floor(ws.papers * 0.3)}</div>
+                            <div class="workspace-stat-label">Shared</div>
+                        </div>
+                        <div class="workspace-stat">
+                            <div class="workspace-stat-value">${ws.lastActive}</div>
+                            <div class="workspace-stat-label">Active</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createNewWorkspace() {
+            const name = prompt('Enter workspace name:');
+            if (!name) return;
+            
+            const description = prompt('Enter workspace description:');
+            const keywords = prompt('Enter keywords (comma-separated):');
+            
+            if (name) {
+                const newWorkspace = {
+                    id: name.toLowerCase().replace(/\s+/g, '-'),
+                    name: name,
+                    description: description || 'New workspace for research papers',
+                    papers: 0,
+                    lastActive: 'Now',
+                    color: '#6b7280',
+                    keywords: keywords ? keywords.split(',').map(k => k.trim()) : []
+                };
+                
+                sampleWorkspaces.push(newWorkspace);
+                loadWorkspaces();
+                state.workspaces++;
+                updateStats();
+                
+                showNotification(`Created workspace "${name}"`, 'success');
+            }
+        }
+
+        function openWorkspace(id) {
+            const workspace = sampleWorkspaces.find(ws => ws.id === id);
+            if (!workspace) return;
+            
+            // Get papers in this workspace
+            const papers = samplePapers.filter(p => p.workspace === id);
+            
+            document.getElementById('workspaceModalTitle').textContent = workspace.name;
+            document.getElementById('workspaceModalContent').innerHTML = `
+                <div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--gray); margin-bottom: 0.5rem;">Description</h3>
+                        <p>${workspace.description}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                            <div style="text-align: center;">
+                                <div style="font-weight: 700; font-size: 1.5rem; color: var(--primary);">${workspace.papers}</div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Papers</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-weight: 700; font-size: 1.5rem; color: var(--secondary);">${Math.floor(workspace.papers * 0.7)}</div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Analyzed</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-weight: 700; font-size: 1.5rem; color: var(--accent);">${Math.floor(workspace.papers * 0.3)}</div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Shared</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--gray); margin-bottom: 0.5rem;">Papers (${papers.length})</h3>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${papers.map(p => `
+                                <div style="padding: 0.5rem; border-bottom: 1px solid #e5e7eb;">
+                                    <div style="font-weight: 600; font-size: 0.9rem;">${p.title}</div>
+                                    <div style="font-size: 0.8rem; color: var(--gray);">${p.authors} • ${p.year}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="addPapersToWorkspace('${id}')">
+                            <i class="fas fa-plus"></i> Add Papers
+                        </button>
+                        <button class="btn btn-secondary" onclick="shareWorkspace('${id}')">
+                            <i class="fas fa-share-alt"></i> Share
+                        </button>
+                        <button class="btn" style="background: #fee2e2; color: #dc2626;" onclick="deleteWorkspace('${id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            showModal('workspaceModal');
+        }
+
+        // Upload Functionality
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            });
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Check if it's a PDF
+                if (file.type !== 'application/pdf') {
+                    showNotification(`"${file.name}" is not a PDF file`, 'error');
+                    continue;
+                }
+                
+                // Check file size (50MB limit)
+                if (file.size > 50 * 1024 * 1024) {
+                    showNotification(`"${file.name}" exceeds 50MB limit`, 'error');
+                    continue;
+                }
+                
+                // Add to state
+                state.uploadedFiles.push({
+                    id: Date.now() + i,
+                    name: file.name,
+                    size: formatFileSize(file.size),
+                    date: new Date().toLocaleDateString(),
+                    status: 'pending'
+                });
+            }
+            
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const container = document.getElementById('fileList');
+            
+            if (state.uploadedFiles.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--gray);">
+                        <i class="fas fa-file-pdf" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No files selected</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = state.uploadedFiles.map(file => `
+                <div class="file-item">
+                    <div class="file-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${file.size} • Uploaded ${file.date}</div>
+                    </div>
+                    <div class="file-remove" onclick="removeFile(${file.id})">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(fileId) {
+            state.uploadedFiles = state.uploadedFiles.filter(f => f.id !== fileId);
+            updateFileList();
+        }
+
+        function clearUploads() {
+            if (state.uploadedFiles.length === 0) return;
+            
+            if (confirm('Remove all uploaded files?')) {
+                state.uploadedFiles = [];
+                updateFileList();
+                showNotification('All files removed', 'success');
+            }
+        }
+
+        function processUploads() {
+            if (state.uploadedFiles.length === 0) {
+                showNotification('No files to upload', 'error');
+                return;
+            }
+            
+            showNotification(`Uploading ${state.uploadedFiles.length} files...`, 'info');
+            
+            // Simulate upload process
+            setTimeout(() => {
+                // Update file status
+                state.uploadedFiles.forEach(file => {
+                    file.status = 'uploaded';
+                });
+                
+                // Update stats
+                state.papers += state.uploadedFiles.length;
+                updateStats();
+                
+                // Show success
+                showNotification(`Successfully uploaded ${state.uploadedFiles.length} papers`, 'success');
+                
+                // Clear uploads
+                state.uploadedFiles = [];
+                updateFileList();
+                
+                // Switch to AI page for analysis
+                switchPage('ai');
+                
+                // Add auto-analysis message
+                addChatMessage('ai', `I've analyzed the ${state.uploadedFiles.length} papers you uploaded. Would you like me to generate a summary or find connections with your existing papers?`);
+            }, 2000);
+        }
+
+        // AI Chat Functionality
+        function loadChatHistory() {
+            const container = document.getElementById('chatContainer');
+            
+            if (state.chatHistory.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--gray);">
+                        <i class="fas fa-robot" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 0.5rem;">Start a conversation</h3>
+                        <p>Ask me about your papers, research topics, or request analysis</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = state.chatHistory.map(msg => `
+                <div class="chat-message ${msg.sender}">
+                    <div class="message-bubble">${msg.text}</div>
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage('user', message);
+            input.value = '';
+            
+            // Show typing indicator
+            const container = document.getElementById('chatContainer');
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'chat-message ai';
+            typingIndicator.innerHTML = '<div class="message-bubble"><i class="fas fa-ellipsis-h"></i> PaperPilot is thinking...</div>';
+            container.appendChild(typingIndicator);
+            container.scrollTop = container.scrollHeight;
+            
+            // Generate AI response after delay
+            setTimeout(() => {
+                // Remove typing indicator
+                typingIndicator.remove();
+                
+                // Generate response
+                const response = generateAIResponse(message);
+                addChatMessage('ai', response);
+                
+                // Update query count
+                state.aiQueries++;
+                document.getElementById('aiQueryCount').textContent = state.aiQueries;
+                document.getElementById('aiCount').textContent = state.aiQueries;
+            }, 1500 + Math.random() * 1000);
+        }
+
+        function addChatMessage(sender, text) {
+            state.chatHistory.push({
+                sender: sender,
+                text: text,
+                timestamp: new Date()
+            });
+            
+            loadChatHistory();
+        }
+
+        function generateAIResponse(message) {
+            const responses = [
+                `Based on your 1,247 papers, I found that ${message.toLowerCase()} is discussed in 42 of them. The key trends show...`,
+                `I analyzed your question about "${message}" and found 3 main papers in your collection that address this topic. Would you like me to summarize them?`,
+                `From your research database, I can see that "${message}" relates to several key areas in your ML workspace. Shall I create a visual map of these connections?`,
+                `Your question "${message}" touches on an emerging research area. I've identified 5 recent papers (2023-2024) that you might want to add to your collection.`,
+                `Based on my analysis, "${message}" represents a significant research gap in your current collection. I recommend exploring papers from CVPR 2023 on this topic.`
+            ];
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function suggestQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendChatMessage();
+        }
+
+        // Analytics
+        function initCharts() {
+            // Activity Chart
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Papers Added',
+                        data: [65, 78, 90, 112, 124, 145, 167],
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'AI Analysis',
+                        data: [45, 56, 67, 89, 101, 120, 142],
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+
+            // Workspace Chart
+            const workspaceCtx = document.getElementById('workspaceChart').getContext('2d');
+            new Chart(workspaceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: sampleWorkspaces.map(ws => ws.name),
+                    datasets: [{
+                        data: sampleWorkspaces.map(ws => ws.papers),
+                        backgroundColor: sampleWorkspaces.map(ws => ws.color),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAnalytics() {
+            // Update keywords
+            const keywordsContainer = document.getElementById('keywordsList');
+            const allKeywords = samplePapers.flatMap(p => p.keywords);
+            const keywordCounts = {};
+            
+            allKeywords.forEach(kw => {
+                keywordCounts[kw] = (keywordCounts[kw] || 0) + 1;
+            });
+            
+            const topKeywords = Object.entries(keywordCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+            
+            keywordsContainer.innerHTML = topKeywords.map(([kw, count]) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">
+                    <span>${kw}</span>
+                    <span style="background: #eff6ff; color: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.9rem;">
+                        ${count} papers
+                    </span>
+                </div>
+            `).join('');
+
+            // Update productivity stats
+            const productivityContainer = document.getElementById('productivityStats');
+            const totalReadTime = state.papers * 45; // minutes per paper
+            const totalAnalysisTime = state.analyses * 15; // minutes per analysis
+            
+            productivityContainer.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; font-size: 1.5rem; color: var(--primary);">${Math.floor(totalReadTime / 60)}h</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">Reading Time Saved</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; font-size: 1.5rem; color: var(--secondary);">${Math.floor(totalAnalysisTime / 60)}h</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">Analysis Time Saved</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; font-size: 1.5rem; color: var(--accent);">${state.papers}</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">Papers Organized</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; font-size: 1.5rem; color: #f59e0b;">${state.analyses}</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">AI Insights Generated</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Utility Functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateStats() {
+            document.getElementById('totalPapers').textContent = state.papers;
+            document.getElementById('totalAnalyses').textContent = state.analyses;
+            document.getElementById('totalWorkspaces').textContent = state.workspaces;
+            document.getElementById('totalChats').textContent = state.chats;
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                max-width: 350px;
+            `;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showProfile() {
+            showModal('profileModal');
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                showNotification('Logging out...', 'info');
+                setTimeout(() => {
+                    alert('In a real application, this would redirect to the login page.');
+                }, 1000);
+            }
+        }
+
+        // Additional Functions
+        function searchTopic(topic) {
+            switchPage('search');
+            document.getElementById('searchPageInput').value = topic;
+            document.getElementById('searchInput').value = topic;
+            searchPapers();
+        }
+
+        function generateReport() {
+            showNotification('Generating research report...', 'info');
+            setTimeout(() => {
+                showNotification('Research report generated! Check your downloads folder.', 'success');
+            }, 2000);
+        }
+
+        function downloadPaper(paperId) {
+            const paper = samplePapers.find(p => p.id === paperId);
+            if (paper) {
+                showNotification(`Downloading "${paper.title}"...`, 'info');
+                setTimeout(() => {
+                    showNotification('Paper downloaded successfully!', 'success');
+                }, 1000);
+            }
+        }
+
+        function analyzePaper(paperId) {
+            const paper = samplePapers.find(p => p.id === paperId);
+            if (paper) {
+                showNotification(`Analyzing "${paper.title}"...`, 'info');
+                state.analyses++;
+                updateStats();
+                
+                setTimeout(() => {
+                    showNotification('AI analysis complete! Check your AI Assistant for results.', 'success');
+                    switchPage('ai');
+                    addChatMessage('ai', `I've completed the analysis of "${paper.title}". Key findings:\n1. Main contribution: ${paper.keywords[0]}\n2. Impact: ${paper.citations.toLocaleString()} citations\n3. Related to ${paper.keywords.length} topics in your collection\n\nWould you like me to find similar papers?`);
+                }, 2000);
+            }
+        }
+
+        // Initialize the application
+        initCharts();
+        loadWorkspaces();
+        updateStats();
+        updateAnalytics();
+    </script>
+</body>
+</html>
