@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperPilot · Sign In</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Keep ALL your existing styles exactly as they are */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #0B1120 0%, #192132 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://adversa.ai/wp-content/uploads/2023/01/Frame-12edited.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.25;
+            z-index: 0;
+        }
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, rgba(11, 17, 32, 0.85), rgba(25, 33, 50, 0.9));
+            z-index: 1;
+        }
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 2;
+        }
+        .bg-glow {
+            position: fixed;
+            top: -20%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 2;
+        }
+        .bg-glow-2 {
+            position: fixed;
+            bottom: -20%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 2;
+        }
+        .orb {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.2), transparent 80%);
+            filter: blur(40px);
+            animation: float 20s infinite alternate ease-in-out;
+            z-index: 2;
+        }
+        .orb-1 { top: 10%; left: 5%; }
+        .orb-2 { bottom: 5%; right: 5%; width: 350px; height: 350px; background: radial-gradient(circle at 70% 70%, rgba(139,92,246,0.15), transparent 80%); animation-delay: -5s; }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 20px) scale(1.1); }
+        }
+        .auth-wrapper {
+            display: flex;
+            width: 100%;
+            max-width: 1280px;
+            min-height: 720px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            overflow: hidden;
+            animation: containerAppear 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        @keyframes containerAppear {
+            0% { opacity: 0; transform: scale(0.98) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .brand-panel {
+            flex: 1.2;
+            padding: 4rem 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
+            backdrop-filter: blur(4px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.6s ease;
+            margin-bottom: 2rem;
+        }
+        .brand-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(145deg, #3b82f6, #8b5cf6);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 26px;
+            font-weight: 700;
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+        }
+        .brand-name {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(145deg, #fff, #e0f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .ai-network-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 1.5rem 0 2rem 0;
+            animation: fadeIn 1s ease;
+        }
+        .ai-network-svg {
+            width: 280px;
+            height: 140px;
+            position: relative;
+        }
+        .network-viz {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .node {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #3b82f6;
+            animation: pulse 3s infinite;
+        }
+        .node-1 { top: 30px; left: 40px; }
+        .node-2 { top: 60px; left: 100px; background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; animation-delay: 0.5s; }
+        .node-3 { top: 20px; left: 160px; background: #10b981; box-shadow: 0 0 15px #10b981; animation-delay: 1s; }
+        .node-4 { top: 80px; left: 200px; background: #f59e0b; box-shadow: 0 0 15px #f59e0b; animation-delay: 1.5s; }
+        .node-5 { top: 100px; left: 120px; background: #ec4899; box-shadow: 0 0 15px #ec4899; animation-delay: 2s; }
+        .node-6 { top: 50px; left: 220px; background: #6366f1; box-shadow: 0 0 15px #6366f1; animation-delay: 2.5s; }
+        .node-7 { top: 90px; left: 40px; background: #14b8a6; box-shadow: 0 0 15px #14b8a6; animation-delay: 3s; }
+        .connection {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(59,130,246,0.3), rgba(139,92,246,0.3));
+            height: 2px;
+            transform-origin: left;
+            animation: glowLine 4s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+        }
+        @keyframes glowLine {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+        .line1 {
+            width: 70px;
+            top: 35px;
+            left: 45px;
+            transform: rotate(25deg);
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+        .line2 {
+            width: 85px;
+            top: 45px;
+            left: 50px;
+            transform: rotate(65deg);
+            background: linear-gradient(90deg, #8b5cf6, #10b981);
+        }
+        .line3 {
+            width: 90px;
+            top: 75px;
+            left: 105px;
+            transform: rotate(-15deg);
+            background: linear-gradient(90deg, #10b981, #f59e0b);
+        }
+        .line4 {
+            width: 60px;
+            top: 95px;
+            left: 125px;
+            transform: rotate(45deg);
+            background: linear-gradient(90deg, #f59e0b, #ec4899);
+        }
+        .line5 {
+            width: 110px;
+            top: 55px;
+            left: 115px;
+            transform: rotate(-30deg);
+            background: linear-gradient(90deg, #ec4899, #6366f1);
+        }
+        .quote-container {
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+        }
+        .quote-mark {
+            font-size: 4rem;
+            line-height: 1;
+            color: #3b82f6;
+            opacity: 0.4;
+            font-family: serif;
+            margin-bottom: -0.8rem;
+        }
+        .quote-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-bottom: 1rem;
+        }
+        .quote-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            font-weight: 400;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+        }
+        .quote-author span {
+            color: white;
+            font-weight: 600;
+        }
+        .feature-list {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95rem;
+            animation: fadeInUp 0.6s ease backwards;
+            animation-delay: calc(0.2s * var(--i, 1));
+        }
+        .feature-item i {
+            color: #3b82f6;
+            font-size: 1.1rem;
+            width: 24px;
+        }
+        .auth-panel {
+            flex: 0.9;
+            padding: 4rem 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+        }
+        .form-container {
+            max-width: 380px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .tabs {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 0.5rem;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 0.5rem 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .tab-btn.active {
+            color: white;
+        }
+        .tab-btn.active::after {
+            width: 100%;
+        }
+        .tab-pane {
+            display: none;
+            animation: fadeSlide 0.4s ease;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateX(-10px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 3rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
+        .input-field::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            bottom: 0.9rem;
+            color: rgba(255,255,255,0.4);
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+        .input-field:focus + .input-icon {
+            color: #3b82f6;
+        }
+        .btn-auth {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(145deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px #3b82f6;
+        }
+        .btn-auth:active {
+            transform: translateY(1px);
+        }
+        .btn-auth::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: width 0.6s, height 0.6s;
+            transform: translate(-50%, -50%);
+        }
+        .btn-auth:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        .auth-footer {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+        .auth-footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        .forgot-link {
+            display: block;
+            text-align: right;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            text-decoration: none;
+        }
+        .forgot-link:hover {
+            color: #3b82f6;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+            margin: 1.5rem 0;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .social-btn {
+            flex: 1;
+            padding: 0.8rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .social-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(59,130,246,0.5);
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .account-required {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fecaca;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .account-required i {
+            color: #ef4444;
+        }
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            animation: slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 1024px) {
+            .auth-wrapper {
+                flex-direction: column;
+                min-height: auto;
+            }
+            .brand-panel {
+                padding: 3rem 2rem;
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+            .quote-text {
+                font-size: 1.5rem;
+            }
+            .ai-network-svg {
+                width: 240px;
+                height: 120px;
+            }
+        }
+        @media (max-width: 640px) {
+            .auth-panel {
+                padding: 2rem 1.5rem;
+            }
+            .brand-panel {
+                padding: 2rem 1.5rem;
+            }
+            .quote-text {
+                font-size: 1.3rem;
+            }
+            .brand-name {
+                font-size: 1.6rem;
+            }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+        <i class="fas fa-check-circle"></i>
+        <span id="successText">Success! Redirecting to dashboard...</span>
+    </div>
+
+    <!-- Account Required Message -->
+    <div class="account-required" id="accountRequiredMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="accountRequiredText">Account not found. Please create an account first.</span>
+    </div>
+
+    <div class="auth-wrapper">
+        <!-- LEFT PANEL -->
+        <div class="brand-panel">
+            <div>
+                <div class="brand-header">
+                    <div class="brand-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <div class="brand-name">PaperPilot</div>
+                </div>
+
+                <div class="ai-network-container">
+                    <div class="ai-network-svg">
+                        <div class="network-viz">
+                            <div class="node node-1"></div>
+                            <div class="node node-2"></div>
+                            <div class="node node-3"></div>
+                            <div class="node node-4"></div>
+                            <div class="node node-5"></div>
+                            <div class="node node-6"></div>
+                            <div class="node node-7"></div>
+                            <div class="connection line1"></div>
+                            <div class="connection line2"></div>
+                            <div class="connection line3"></div>
+                            <div class="connection line4"></div>
+                            <div class="connection line5"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quote-container">
+                    <div class="quote-mark">"</div>
+                    <div class="quote-text">
+                        Navigating the sea of research, one paper at a time.
+                    </div>
+                    <div class="quote-author">
+                        <i class="fas fa-robot" style="color: #3b82f6;"></i>
+                        <span>PaperPilot AI</span> · Research Assistant
+                    </div>
+                </div>
+
+                <div class="feature-list">
+                    <div class="feature-item" style="--i: 1">
+                        <i class="fas fa-brain"></i>
+                        <span>Agentic AI that understands your research</span>
+                    </div>
+                    <div class="feature-item" style="--i: 2">
+                        <i class="fas fa-folder-tree"></i>
+                        <span>Smart workspaces for every project</span>
+                    </div>
+                    <div class="feature-item" style="--i: 3">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Real-time analytics & research trends</span>
+                    </div>
+                    <div class="feature-item" style="--i: 4">
+                        <i class="fas fa-shield-hal"></i>
+                        <span>Enterprise-grade security & privacy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL - Forms -->
+        <div class="auth-panel">
+            <div class="form-container">
+                <div class="tabs">
+                    <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+                    <button class="tab-btn" id="registerTab" onclick="switchTab('register')">Create Account</button>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <div class="tab-pane active" id="loginForm">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" class="input-field" id="loginEmail" placeholder="alex@stanford.edu">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <div class="error-message" id="loginEmailError"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" class="input-field" id="loginPassword" placeholder="••••••••">
+                        <i class="fas fa-lock input-icon"></i>
+                        <div class="error-message" id="loginPasswordError"></div>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <button class="btn-auth" onclick="handleLogin()">
+                        <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+                    </button>
+
+                    <div class="divider">
+                        <span>OR CONTINUE WITH</span>
+                    </div>
+
+                    <div class="social-buttons">
+                        <button class="social-btn" onclick="socialLogin('google')">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button class="social-btn" onclick="socialLogin('github')">
+                            <i class="fab fa-github"></i> GitHub
+                        </button>
+                    </div>
+
+                    <div class="auth-footer">
+                        Don't have an account? <a href="#" onclick="switchTab('register'); return false;">Sign up</a>
+                    </div>
+                </div>
+
+                <!-- REGISTER FORM -->
+                <div class="tab-pane" id="registerForm">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" class="input-field" id="regName" placeholder="Dr. Alex Rivera">
+                        <i class="fas fa-user input-icon"></i>
+                        <div class="error-message" id="regNameError"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" class="input-field" id="regEmail" placeholder="alex@stanford.edu">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <div class="error-message" id="regEmailError"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Institution</label>
+                        <input type="text" class="input-field" id="regInstitution" placeholder="Stanford University">
+                        <i class="fas fa-building-columns input-icon"></i>
+                        <div class="error-message" id="regInstitutionError"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" class="input-field" id="regPassword" placeholder="Create a password">
+                        <i class="fas fa-lock input-icon"></i>
+                        <div class="error-message" id="regPasswordError"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Confirm Password</label>
+                        <input type="password" class="input-field" id="regConfirmPassword" placeholder="Confirm password">
+                        <i class="fas fa-lock input-icon"></i>
+                        <div class="error-message" id="regConfirmError"></div>
+                    </div>
+                    <button class="btn-auth" onclick="handleRegister()">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+
+                    <div class="divider">
+                        <span>OR SIGN UP WITH</span>
+                    </div>
+
+                    <div class="social-buttons">
+                        <button class="social-btn" onclick="socialLogin('google')">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button class="social-btn" onclick="socialLogin('github')">
+                            <i class="fab fa-github"></i> GitHub
+                        </button>
+                    </div>
+
+                    <div class="auth-footer">
+                        Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SINGLE CLEAN SCRIPT SECTION - NO DUPLICATES -->
+    <script>
+        // ============ LOCAL STORAGE AUTHENTICATION ============
+        // Initialize users in localStorage
+        function initStorage() {
+            if (!localStorage.getItem('paperpilot_users')) {
+                // Create default demo user
+                const defaultUser = {
+                    id: '1',
+                    name: 'Dr. Alex Rivera',
+                    email: 'alex@stanford.edu',
+                    institution: 'Stanford University',
+                    password: 'password123',
+                    created: new Date().toISOString(),
+                    lastLogin: new Date().toISOString()
+                };
+                localStorage.setItem('paperpilot_users', JSON.stringify([defaultUser]));
+            }
+        }
+
+        // Get all users
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('paperpilot_users')) || [];
+        }
+
+        // Save users
+        function saveUsers(users) {
+            localStorage.setItem('paperpilot_users', JSON.stringify(users));
+        }
+
+        // Clear error messages
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            document.getElementById('accountRequiredMessage').style.display = 'none';
+        }
+
+        // Show error
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Show account required message
+        function showAccountRequired() {
+            const msg = document.getElementById('accountRequiredMessage');
+            msg.style.display = 'flex';
+            setTimeout(() => { msg.style.display = 'none'; }, 5000);
+        }
+
+        // Show success message and redirect to pract.html (particle page) FIRST
+        function showSuccessAndRedirect(message) {
+            const successMsg = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            successText.textContent = message;
+            successMsg.style.display = 'flex';
+
+            // FIRST REDIRECT TO PRACT.HTML (particle animation page)
+            setTimeout(() => {
+                window.location.href = 'pract.html'; // Go to particle page first
+            }, 1500);
+        }
+
+        // ============ HANDLE REGISTRATION ============
+        function handleRegister() {
+            clearErrors();
+            
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const institution = document.getElementById('regInstitution').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            let isValid = true;
+
+            if (!name) { showError('regNameError', 'Full name is required'); isValid = false; }
+            if (!email) { showError('regEmailError', 'Email address is required'); isValid = false; }
+            else if (!email.includes('@') || !email.includes('.')) { showError('regEmailError', 'Please enter a valid email address'); isValid = false; }
+            if (!institution) { showError('regInstitutionError', 'Institution is required'); isValid = false; }
+            if (!password) { showError('regPasswordError', 'Password is required'); isValid = false; }
+            else if (password.length < 8) { showError('regPasswordError', 'Password must be at least 8 characters'); isValid = false; }
+            if (!confirmPassword) { showError('regConfirmError', 'Please confirm your password'); isValid = false; }
+            else if (password !== confirmPassword) { showError('regConfirmError', 'Passwords do not match'); isValid = false; }
+
+            if (!isValid) return;
+
+            const users = getUsers();
+            const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+            if (existingUser) {
+                showError('regEmailError', 'An account with this email already exists. Please sign in.');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now().toString(),
+                name: name,
+                email: email,
+                institution: institution,
+                password: password,
+                created: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            saveUsers(users);
+
+            const userData = {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                institution: newUser.institution,
+                lastLogin: new Date().toISOString(),
+                isAuthenticated: true
+            };
+            
+            localStorage.setItem('paperpilot_current_user', JSON.stringify(userData));
+            
+            // Initialize workspace for new user
+            initializeUserWorkspaces(newUser.id, newUser.email, name);
+
+            showSuccessAndRedirect('Account created successfully!');
+        }
+
+        // ============ HANDLE LOGIN ============
+        function handleLogin() {
+            clearErrors();
+            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            let isValid = true;
+
+            if (!email) { showError('loginEmailError', 'Email is required'); isValid = false; }
+            if (!password) { showError('loginPasswordError', 'Password is required'); isValid = false; }
+
+            if (!isValid) return;
+
+            const users = getUsers();
+            const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+            if (!user) {
+                showAccountRequired();
+                showError('loginEmailError', '❌ No account found. Please create an account first.');
+                setTimeout(() => {
+                    switchTab('register');
+                    document.getElementById('regEmail').value = email;
+                }, 2000);
+                return;
+            }
+
+            if (user.password !== password) {
+                showError('loginPasswordError', 'Incorrect password');
+                return;
+            }
+
+            user.lastLogin = new Date().toISOString();
+            saveUsers(users);
+
+            const userData = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                institution: user.institution,
+                lastLogin: new Date().toISOString(),
+                isAuthenticated: true
+            };
+            
+            localStorage.setItem('paperpilot_current_user', JSON.stringify(userData));
+            
+            initializeUserWorkspaces(user.id, user.email, user.name);
+
+            showSuccessAndRedirect('Welcome back!');
+        }
+
+        // ============ INITIALIZE USER WORKSPACES ============
+        function initializeUserWorkspaces(userId, userEmail, userName) {
+            const workspacesKey = `workspaces_${userId}`;
+            
+            if (!localStorage.getItem(workspacesKey)) {
+                const defaultWorkspaces = [
+                    {
+                        id: `ml-${Date.now()}`,
+                        name: 'Machine Learning',
+                        icon: 'microchip',
+                        papers: [],
+                        chatHistory: [
+                            {
+                                id: `welcome-${Date.now()}`,
+                                sender: 'ai',
+                                text: `Hello ${userName}! I'm your AI assistant for the Machine Learning workspace.`,
+                                timestamp: new Date().toISOString()
+                            }
+                        ],
+                        created: new Date().toISOString()
+                    },
+                    {
+                        id: `cv-${Date.now()}`,
+                        name: 'Computer Vision',
+                        icon: 'eye',
+                        papers: [],
+                        chatHistory: [
+                            {
+                                id: `welcome-${Date.now() + 1}`,
+                                sender: 'ai',
+                                text: `Hello ${userName}! I'm your AI assistant for the Computer Vision workspace.`,
+                                timestamp: new Date().toISOString()
+                            }
+                        ],
+                        created: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem(workspacesKey, JSON.stringify(defaultWorkspaces));
+            }
+            
+            const docsKey = `documents_${userId}`;
+            if (!localStorage.getItem(docsKey)) localStorage.setItem(docsKey, JSON.stringify([]));
+            if (!localStorage.getItem(`analyses_${userId}`)) localStorage.setItem(`analyses_${userId}`, '0');
+            if (!localStorage.getItem(`chats_${userId}`)) localStorage.setItem(`chats_${userId}`, '0');
+            if (!localStorage.getItem(`analyses_${userId}_list`)) localStorage.setItem(`analyses_${userId}_list`, JSON.stringify([]));
+        }
+
+        // ============ SOCIAL LOGIN ============
+        function socialLogin(provider) {
+            clearErrors();
+            
+            const email = provider === 'google' 
+                ? `user${Math.floor(Math.random() * 1000)}@gmail.com` 
+                : `dev${Math.floor(Math.random() * 1000)}@github.com`;
+            
+            const name = provider === 'google' 
+                ? `Google User ${Math.floor(Math.random() * 100)}` 
+                : `GitHub User ${Math.floor(Math.random() * 100)}`;
+
+            const users = getUsers();
+            let existingUser = users.find(u => u.email === email);
+
+            if (!existingUser) {
+                const newUser = {
+                    id: Date.now().toString(),
+                    name: name,
+                    email: email,
+                    institution: provider === 'google' ? 'Various Universities' : 'Open Source Community',
+                    password: 'social_' + Date.now(),
+                    created: new Date().toISOString(),
+                    lastLogin: new Date().toISOString()
+                };
+                
+                users.push(newUser);
+                saveUsers(users);
+                existingUser = newUser;
+                
+                initializeUserWorkspaces(existingUser.id, existingUser.email, existingUser.name);
+            } else {
+                existingUser.lastLogin = new Date().toISOString();
+                saveUsers(users);
+            }
+            
+            const userData = {
+                id: existingUser.id,
+                name: existingUser.name,
+                email: existingUser.email,
+                institution: existingUser.institution,
+                lastLogin: new Date().toISOString(),
+                isAuthenticated: true
+            };
+            
+            localStorage.setItem('paperpilot_current_user', JSON.stringify(userData));
+            
+            showSuccessAndRedirect(`Welcome${!existingUser ? '! Account created' : ' back'}!`);
+        }
+
+        // ============ FORGOT PASSWORD ============
+        document.querySelector('.forgot-link')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            
+            if (email) {
+                const users = getUsers();
+                const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+                
+                if (user) {
+                    alert(`Password reset link sent to ${email}\n\n(Demo: Your password is: ${user.password})`);
+                } else {
+                    alert('❌ Account not found. Please create an account first.');
+                    setTimeout(() => {
+                        switchTab('register');
+                        document.getElementById('regEmail').value = email;
+                    }, 1500);
+                }
+            } else {
+                alert('Please enter your email address.');
+            }
+        });
+
+        // ============ TAB SWITCHING ============
+        function switchTab(tab) {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+
+            if (tab === 'login') {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+            } else {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                registerForm.classList.add('active');
+                loginForm.classList.remove('active');
+            }
+            clearErrors();
+        }
+
+        // ============ INITIALIZE ============
+        document.addEventListener('DOMContentLoaded', function() {
+            initStorage();
+            
+            // Clear any existing session on login page
+            localStorage.removeItem('paperpilot_current_user');
+            
+            // Pre-fill demo credentials
+            document.getElementById('loginEmail').value = 'alex@stanford.edu';
+            document.getElementById('loginPassword').value = 'password123';
+            
+            // Clear registration fields
+            document.getElementById('regName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regInstitution').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+        });
+    </script>
+</body>
+</html>

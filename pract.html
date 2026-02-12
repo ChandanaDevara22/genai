@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PaperPilot · dark ocean</title>
+  <style>
+    /* Keep ALL your existing styles exactly as they are */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0a1a2f;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      width: 100vw;
+      height: 100vh;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      font-size: 100px;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(79, 159, 255, 0.5);
+      white-space: nowrap;
+      z-index: 30;
+      opacity: 0;
+      animation: riseFromBottom 1.8s cubic-bezier(0.22, 0.98, 0.48, 1) forwards;
+      pointer-events: none;
+    }
+    @keyframes riseFromBottom {
+      0% { bottom: -10%; opacity: 0; transform: translateX(-50%) scale(0.95); }
+      40% { opacity: 1; }
+      100% { bottom: 75%; opacity: 1; transform: translateX(-50%) scale(1); }
+    }
+    .left-panel {
+      position: absolute;
+      left: 6vw;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 25;
+      max-width: 45%;
+      pointer-events: auto;
+      opacity: 0;
+      animation: fadeSlideIn 1.2s ease-out 0.3s forwards;
+    }
+    .big-quote {
+      font-size: 4.2vw;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #ffffff;
+      text-shadow: 0 4px 12px rgba(79, 159, 255, 0.3);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25em;
+    }
+    .sub-quote {
+      font-size: 1.6vw;
+      font-weight: 400;
+      color: #ffffff;
+      opacity: 0.9;
+      margin-bottom: 1.8em;
+      line-height: 1.5;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .btn {
+      background: #4f9fff;
+      border: none;
+      color: #0a1a2f;
+      font-size: 1.3vw;
+      font-weight: 700;
+      padding: 0.9em 2.5em;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(79, 159, 255, 0.4);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      letter-spacing: 1px;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .btn:hover {
+      background: #7ab7ff;
+      color: #0a1a2f;
+      transform: scale(1.02);
+      box-shadow: 0 12px 28px rgba(79, 159, 255, 0.5);
+    }
+    @keyframes fadeSlideIn {
+      0% { opacity: 0; transform: translateY(-30px); }
+      100% { opacity: 1; transform: translateY(-50%); }
+    }
+    @media (max-width: 900px) {
+      .title { font-size: 70px; }
+      .big-quote { font-size: 3rem; }
+      .sub-quote { font-size: 1.2rem; }
+      .btn { font-size: 1rem; }
+      .left-panel { max-width: 70%; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <h1 class="title" id="paperPilotTitle">PaperPilot</h1>
+
+  <div class="left-panel">
+    <div class="big-quote">Explore the Unknown</div>
+    <div class="sub-quote">drop your ideas into void and see what connects.</div>
+    <button class="btn" onclick="goToDashboard()">GET STARTED</button>
+  </div>
+
+  <script>
+    // ============ AUTHENTICATION & USER SYNC ============
+    function goToDashboard() {
+        const userStr = localStorage.getItem('paperpilot_current_user');
+        
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user && user.isAuthenticated) {
+                    // User is authenticated, go to dashboard
+                    window.location.href = 'd.html';
+                    return;
+                }
+            } catch (e) {
+                console.error('Error parsing user data');
+            }
+        }
+        
+        // Not authenticated, go back to login
+        alert('Please sign in first');
+        window.location.href = 'index.html';
+    }
+
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const userStr = localStorage.getItem('paperpilot_current_user');
+        
+        if (!userStr) {
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        try {
+            const user = JSON.parse(userStr);
+            if (!user || !user.isAuthenticated) {
+                window.location.href = 'index.html';
+            }
+        } catch (e) {
+            window.location.href = 'index.html';
+        }
+    });
+
+    // ============ PARTICLE NETWORK CODE (keep all your existing animation code) ============
+    const canvas = document.getElementById("bg");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+
+    let mouse = { x: null, y: null };
+
+    window.addEventListener("mousemove", e => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      const title = document.getElementById('paperPilotTitle');
+      if (title.style.top === '80px') {
+        title.style.top = '80px';
+        title.style.bottom = 'auto';
+        title.style.transform = 'translateX(-50%)';
+      }
+    });
+
+    const img = new Image();
+    img.src = 'ai.jpg';
+    let imageLoaded = false;
+    img.onload = function() {
+      imageLoaded = true;
+    };
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 1.2;
+        this.vy = (Math.random() - 0.5) * 1.2;
+        this.size = 2.4;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        if (mouse.x !== null && mouse.y !== null) {
+          let dx = mouse.x - this.x;
+          let dy = mouse.y - this.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            this.x -= dx / 18;
+            this.y -= dy / 18;
+          }
+        }
+      }
+    }
+
+    let particles = [];
+    for (let i = 0; i < 150; i++) {
+      particles.push(new Particle());
+    }
+
+    function connect() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          let dx = particles[i].x - particles[j].x;
+          let dy = particles[i].y - particles[j].y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 130) {
+            let opacity = (130 - dist) / 200;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 + opacity * 0.3})`;
+            ctx.lineWidth = 1.1;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = '#0a1a2f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (imageLoaded) {
+        const imgWidth = canvas.width * 0.35;
+        const imgHeight = (img.height / img.width) * imgWidth;
+        const x = canvas.width - imgWidth - canvas.width * 0.05;
+        const y = (canvas.height - imgHeight) / 2;
+        ctx.drawImage(img, x, y, imgWidth, imgHeight);
+      }
+
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      connect();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener('load', function() {
+      const title = document.getElementById('paperPilotTitle');
+      setTimeout(() => {
+        title.style.animation = 'none';
+        title.style.bottom = 'auto';
+        title.style.top = '80px';
+        title.style.transform = 'translateX(-50%)';
+        title.style.opacity = '1';
+      }, 1800);
+    });
+  </script>
+</body>
+</html>
